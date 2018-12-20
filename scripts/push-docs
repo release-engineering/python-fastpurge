@@ -1,0 +1,35 @@
+#!/bin/bash
+set -e
+
+enabled(){
+  if [ "$TRAVIS_BRANCH" != "master" ] || [ $TRAVIS_PULL_REQUEST != "false" ]; then
+    return 1
+  fi
+}
+
+rev=$(git rev-parse --short HEAD)
+version=$(python ./setup.py --version | cut -d. -f1,2)
+
+cd docs-build/html
+
+git init
+git config user.name "${GITHUB_AUTHOR:-doc bot}"
+git config user.email "${GITHUB_EMAIL:-no-reply@redhat.com}"
+
+if enabled; then
+  git remote add origin "https://$GITHUB_TOKEN@github.com/release-engineering/python-fastpurge.git"
+  git fetch origin
+  git reset origin/gh-pages
+fi
+
+mkdir -p archive/${version}
+cp -rv *.html *.js *.inv _* archive/${version} 
+
+git add -A .
+git commit -m "Build documentation for ${version} at ${rev}"
+
+if enabled; then
+  git push -q origin HEAD:refs/heads/gh-pages
+else
+  echo "Docs would now be pushed, if this were submitted to master."
+fi
