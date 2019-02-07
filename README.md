@@ -3,6 +3,9 @@ python-fastpurge
 
 A Python client for the [Akamai Fast Purge API](https://developer.akamai.com/api/core_features/fast_purge/v3.html).
 
+[![Build Status](https://travis-ci.org/release-engineering/python-fastpurge.svg?branch=master)](https://travis-ci.org/release-engineering/python-fastpurge)
+[![Coverage Status](https://coveralls.io/repos/github/release-engineering/python-fastpurge/badge.svg?branch=master)](https://coveralls.io/github/release-engineering/python-fastpurge?branch=master)
+
 This library provides a simple asynchronous Python wrapper for the Fast Purge
 API. Features include:
 
