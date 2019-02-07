@@ -1,7 +1,8 @@
-from monotonic import monotonic
 import pytest
 import requests_mock
 import mock
+
+from monotonic import monotonic
 
 from fastpurge import FastPurgeClient, FastPurgeError
 

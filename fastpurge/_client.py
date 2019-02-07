@@ -1,16 +1,20 @@
-from threading import local, Lock
 import json
-import os
-from collections import namedtuple
-from six.moves.urllib.parse import urljoin
-from six import string_types
-from monotonic import monotonic
 import logging
+import os
+
+from collections import namedtuple
+from threading import local, Lock
+
 import requests
-from more_executors import Executors
-from more_executors.futures import f_sequence
+
+from six import string_types
+from six.moves.urllib.parse import urljoin
+
 from akamai.edgegrid import EdgeGridAuth
 from akamai.edgegrid.edgerc import EdgeRc
+from monotonic import monotonic
+from more_executors import Executors
+from more_executors.futures import f_sequence
 
 LOG = logging.getLogger('fastpurge')
 
@@ -157,7 +161,7 @@ class FastPurgeClient(object):
                 LOG.debug("purge_id %s not expected to complete yet", purge_id)
                 continue
 
-            # In CCUv3, unlike CCUv2, Akamai do not provide any method to query the status
+            # In CCUv3, unlike CCUv2, Akamai does not provide any method to query the status
             # of a purge :(
             #
             # Here's what they say in the FAQ about this https://bit.ly/2BvDR5x
