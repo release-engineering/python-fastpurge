@@ -18,8 +18,18 @@ API. Features include:
 - splitting large requests into smaller pieces
 
 
-Example
--------
+Installation
+------------
+
+Install the `fastpurge` package from PyPI.
+
+```
+pip install fastpurge
+```
+
+
+Usage Example
+-------------
 
 Assuming a valid `~/.edgerc` file prepared with credentials according to
 Akamai's documentation:
