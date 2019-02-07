@@ -21,7 +21,7 @@ def get_long_description():
 
 setup(
     name='fastpurge',
-    version='1.0.0.dev0',
+    version='1.0.0',
     author='',
     author_email='',
     packages=['fastpurge'],
