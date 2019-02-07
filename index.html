@@ -77,7 +77,7 @@ by other clients in the Akamai ecosystem.  If you’d like to configure
 the credentials separately, you can pass them to the client constructor
 explicitly, as in example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fastpurge</span> <span class="kn">import</span> <span class="n">FastPurgeClient</span>
-<span class="n">client</span> <span class="o">=</span> <span class="n">FastPurgeClient</span><span class="p">({</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">FastPurgeClient</span><span class="p">(</span><span class="n">auth</span><span class="o">=</span><span class="p">{</span>
     <span class="c1"># The entries from ~/.edgerc can be supplied directly here</span>
     <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;akaa-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx.luna.akamaiapis.net&quot;</span><span class="p">,</span>
     <span class="s2">&quot;client_token&quot;</span><span class="p">:</span> <span class="s2">&quot;akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx&quot;</span><span class="p">,</span>
