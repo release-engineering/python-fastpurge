@@ -4,6 +4,8 @@ import os
 from fastpurge import FastPurgeError
 from fastpurge._client import get_auth_dict
 
+# pylint: disable=unused-argument
+
 
 @pytest.fixture
 def tmp_home(tmpdir):

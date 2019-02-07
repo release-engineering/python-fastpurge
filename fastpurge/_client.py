@@ -25,7 +25,6 @@ Purge = namedtuple('Purge', [
 
 class FastPurgeError(RuntimeError):
     """An error raised during a Fast Purge operation."""
-    pass
 
 
 class FastPurgeClient(object):
@@ -171,7 +170,7 @@ class FastPurgeClient(object):
             # here.
             descriptor.yield_result(descriptor.result.response_body)
 
-        LOG.debug("now %s, earliest %s, sleep %s" % (now, earliest, earliest - now))
+        LOG.debug("now %s, earliest %s, sleep %s", now, earliest, earliest - now)
         return min(earliest - now, cls.DEFAULT_DELAY)
 
     @property
@@ -179,8 +178,10 @@ class FastPurgeClient(object):
         out = '{scheme}://{host}'.format(
             scheme=self.__scheme, host=self.__host)
 
-        if (self.__scheme == 'http' and self.__port == 80) \
-          or (self.__scheme == 'https' and self.__port == 443):
+        default = (self.__scheme == 'http' and self.__port == 80)
+        default = default or (self.__scheme == 'https' and self.__port == 443)
+
+        if default:
             return out
 
         return '{out}:{port}'.format(out=out, port=self.__port)

@@ -5,6 +5,8 @@ import mock
 
 from fastpurge import FastPurgeClient, FastPurgeError
 
+# pylint: disable=unused-argument
+
 
 @pytest.fixture
 def client_auth():
