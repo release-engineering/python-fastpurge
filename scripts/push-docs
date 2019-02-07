@@ -12,7 +12,7 @@ set -x
 rev=$(git rev-parse --short HEAD)
 version=$(python ./setup.py --version | cut -d. -f1,2)
 
-cd docs-build/html
+cd docs/_build/html
 
 git init
 git config user.name "${GITHUB_AUTHOR:-doc bot}"
@@ -23,9 +23,6 @@ if enabled; then
   git fetch origin
   git reset origin/gh-pages
 fi
-
-mkdir -p archive/${version}
-cp -rv *.html *.js *.inv _* archive/${version} 
 
 git add -A .
 git commit -m "Build documentation for ${version} at ${rev}"
