@@ -1,5 +1,6 @@
 import pytest
 import os
+import textwrap
 
 from fastpurge import FastPurgeError
 from fastpurge._client import get_auth_dict
@@ -51,14 +52,14 @@ def test_auth_missing_settings(tmp_home):
 def test_auth_from_home_edgerc(tmp_home):
     """get_auth_dict reads config from ~/.edgerc by default."""
 
-    tmp_home.join('.edgerc').write("""
+    tmp_home.join('.edgerc').write(textwrap.dedent("""
         [default]
         client_secret = some-secret
         host = some-host
         access_token = some-access-token
         client_token = some-client-token
         other_value = irrelevant
-    """)
+    """))
 
     result = get_auth_dict(None)
 
@@ -73,14 +74,14 @@ def test_auth_from_home_edgerc(tmp_home):
 def test_auth_from_custom_edgerc(tmpdir):
     """get_auth_dict reads config from edgerc at the given path, if provided a string."""
 
-    tmpdir.join('some-file').write("""
+    tmpdir.join('some-file').write(textwrap.dedent("""
         [default]
         client_secret = some-secret
         host = some-host
         access_token = some-access-token
         client_token = some-client-token
         other_value = irrelevant
-    """)
+    """))
 
     result = get_auth_dict(str(tmpdir.join('some-file')))
 

@@ -34,10 +34,10 @@ def requests_mocker():
 
 @pytest.fixture
 def no_retries():
-    """Temporarily suppress retries via more_executors."""
+    """Suppress retries for the duration of this fixture."""
 
     with mock.patch('more_executors.retry.ExceptionRetryPolicy') as policy_class:
-        policy = policy_class.new_default.return_value
+        policy = policy_class.return_value
         policy.should_retry.return_value = False
         policy.sleep_time.return_value = 0.1
         yield
