@@ -25,7 +25,9 @@ Purge = namedtuple('Purge', [
 
 
 class FastPurgeError(RuntimeError):
-    """An error raised during a Fast Purge operation."""
+    """Raised when the Fast Purge API reports an error.
+
+    The exception message contains a summary of the error encountered."""
 
 
 class FastPurgeClient(object):
@@ -259,7 +261,7 @@ class FastPurgeClient(object):
 
                 result:
                     If a purge succeeds, the result is a list of responses from the
-                    Fast Purge API (:class:`dict`). See the Akamai Fast Purge documentation
+                    Fast Purge API (:class:`dict`). See the `fast purge resources`_
                     for the expected fields in the response.
 
                     Typically, the result would contain only a single response object.
@@ -274,6 +276,8 @@ class FastPurgeClient(object):
                     If purge(s) fail, an exception will be set; typically, though
                     not always, an instance of :class:`FastPurgeError`.
 
+        .. _fast purge resources:
+           https://developer.akamai.com/api/core_features/fast_purge/v3.html#resources
         .. _fast purge concepts:
            https://developer.akamai.com/api/core_features/fast_purge/v3.html#concepts
         """
