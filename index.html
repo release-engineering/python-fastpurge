@@ -37,6 +37,58 @@
 <p>A client for the <a class="reference external" href="https://developer.akamai.com/api/core_features/fast_purge/v3.html">Akamai Fast Purge API</a>.</p>
 <div class="toctree-wrapper compound">
 </div>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/release-engineering/python-fastpurge">Source</a></li>
+<li><a class="reference external" href="https://release-engineering.github.io/python-fastpurge/">Documentation</a></li>
+<li><a class="reference external" href="https://pypi.org/project/fastpurge">PyPI</a></li>
+</ul>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>Install the fastpurge client from PyPI:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">fastpurge</span>
+</pre></div>
+</div>
+<p>Authorize a client in the <a class="reference external" href="https://developer.akamai.com/legacy/introduction/Luna_Setup.html">Akamai Control Center</a>.</p>
+<p>Place the client credentials in an <a class="reference external" href="https://developer.akamai.com/legacy/introduction/Conf_Client.html">edgerc</a> file located at <code class="docutils literal notranslate"><span class="pre">$HOME/.edgerc</span></code>;
+this is an INI-style configuration file with the following structure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">default</span><span class="p">]</span>
+<span class="n">host</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">Base</span> <span class="n">hostname</span> <span class="n">without</span> <span class="n">the</span> <span class="n">scheme</span><span class="o">&gt;</span>
+<span class="n">client_token</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">Client</span> <span class="n">token</span><span class="o">&gt;</span>
+<span class="n">client_secret</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">Secret</span><span class="o">&gt;</span>
+<span class="n">access_token</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">Access</span> <span class="n">Token</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>In your Python code, construct a <code class="docutils literal notranslate"><span class="pre">FastPurgeClient</span></code> and call the
+purge methods.  Make sure to block on the returned <code class="docutils literal notranslate"><span class="pre">Future</span></code>
+if you want to wait for the purge to complete.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fastpurge</span> <span class="kn">import</span> <span class="n">FastPurgeClient</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">FastPurgeClient</span><span class="p">()</span>
+
+<span class="c1"># start a purge of two URLs</span>
+<span class="n">future</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">purge_by_url</span><span class="p">([</span><span class="s2">&quot;https://example.com/resource1&quot;</span><span class="p">,</span>
+                              <span class="s2">&quot;https://example.com/resource2&quot;</span><span class="p">])</span>
+
+<span class="c1"># wait for the purge to complete (or raise if purge fails)</span>
+<span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Usage of <code class="docutils literal notranslate"><span class="pre">$HOME/.edgerc</span></code> for credentials is a convention supported
+by other clients in the Akamai ecosystem.  If you’d like to configure
+the credentials separately, you can pass them to the client constructor
+explicitly, as in example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fastpurge</span> <span class="kn">import</span> <span class="n">FastPurgeClient</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">FastPurgeClient</span><span class="p">({</span>
+    <span class="c1"># The entries from ~/.edgerc can be supplied directly here</span>
+    <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;akaa-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx.luna.akamaiapis.net&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;client_token&quot;</span><span class="p">:</span> <span class="s2">&quot;akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;client_secret&quot;</span><span class="p">:</span> <span class="s2">&quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;access_token&quot;</span><span class="p">:</span> <span class="s2">&quot;akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx&quot;</span><span class="p">,</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="fastpurge.FastPurgeClient">
 <em class="property">class </em><code class="descclassname">fastpurge.</code><code class="descname">FastPurgeClient</code><span class="sig-paren">(</span><em>auth=None</em>, <em>scheme='https'</em>, <em>port=443</em><span class="sig-paren">)</span><a class="headerlink" href="#fastpurge.FastPurgeClient" title="Permalink to this definition">¶</a></dt>
@@ -100,7 +152,7 @@ these purge types. The default is “delete”.</li>
 <dl class="docutils">
 <dt>result:</dt>
 <dd><p class="first">If a purge succeeds, the result is a list of responses from the
-Fast Purge API (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>). See the Akamai Fast Purge documentation
+Fast Purge API (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>). See the <a class="reference external" href="https://developer.akamai.com/api/core_features/fast_purge/v3.html#resources">fast purge resources</a>
 for the expected fields in the response.</p>
 <p>Typically, the result would contain only a single response object.
 Multiple responses are provided if the client split a large cache
@@ -147,9 +199,11 @@ not always, an instance of <a class="reference internal" href="#fastpurge.FastPu
 <dl class="class">
 <dt id="fastpurge.FastPurgeError">
 <em class="property">class </em><code class="descclassname">fastpurge.</code><code class="descname">FastPurgeError</code><a class="headerlink" href="#fastpurge.FastPurgeError" title="Permalink to this definition">¶</a></dt>
-<dd><p>An error raised during a Fast Purge operation.</p>
+<dd><p>Raised when the Fast Purge API reports an error.</p>
+<p>The exception message contains a summary of the error encountered.</p>
 </dd></dl>
 
+</div>
 </div>
 
 
@@ -178,9 +232,9 @@ not always, an instance of <a class="reference internal" href="#fastpurge.FastPu
 <hr />
 <ul>
     
-    <li class="toctree-l1"><a href="genindex.html">Index</a></li>
-    
     <li class="toctree-l1"><a href="index.html">API Reference</a></li>
+    
+    <li class="toctree-l1"><a href="genindex.html">Index</a></li>
     
 </ul>
 <div class="relations">
