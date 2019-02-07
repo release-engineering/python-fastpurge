@@ -57,7 +57,7 @@ explicitly, as in example:
 .. code-block:: python
 
     from fastpurge import FastPurgeClient
-    client = FastPurgeClient({
+    client = FastPurgeClient(auth={
         # The entries from ~/.edgerc can be supplied directly here
         "host": "akaa-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx.luna.akamaiapis.net",
         "client_token": "akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx",
