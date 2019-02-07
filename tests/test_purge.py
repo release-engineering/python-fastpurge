@@ -55,20 +55,20 @@ def test_purge_by_url(client, requests_mocker):
         json=response)
 
     time_before_purge = monotonic()
-    futures = client.purge_by_url(["https://example.com/some-content"])
-
-    # It should have returned just one future (just one request)
-    assert len(futures) == 1
+    future = client.purge_by_url(["https://example.com/some-content"])
 
     # It should have succeeded
-    result = futures[0].result()
+    result = future.result()
+
+    # It should have returned just one response (for just one request)
+    assert len(result) == 1
 
     # It should have waited at least for the estimatedSeconds to elapse
     time_after_purge = monotonic()
     assert time_after_purge - time_before_purge >= seconds
 
     # It should have returned whatever the API returned
-    assert result == response
+    assert result[0] == response
 
     history = requests_mocker.request_history
 
@@ -99,13 +99,10 @@ def test_purge_by_tag(client, requests_mocker):
         status_code=201,
         json=response)
 
-    futures = client.purge_by_tag(["red", "blue", "green"], purge_type='invalidate')
-
-    # It should have returned just one future (just one request)
-    assert len(futures) == 1
+    future = client.purge_by_tag(["red", "blue", "green"], purge_type='invalidate')
 
     # It should have succeeded
-    assert futures[0].result()
+    assert future.result()
 
     history = requests_mocker.request_history
 
@@ -126,8 +123,8 @@ def test_scheme_port(client_auth, requests_mocker):
         status_code=201,
         json=response)
 
-    futures = client.purge_by_tag(['red'], network='staging')
-    assert futures[0].result()
+    future = client.purge_by_tag(['red'], network='staging')
+    assert future.result()
 
 
 def test_response_fails(client, requests_mocker, no_retries):
@@ -139,8 +136,8 @@ def test_response_fails(client, requests_mocker, no_retries):
         status_code=503,
         reason='simulated internal error')
 
-    futures = client.purge_by_cpcode([1234, 5678])
-    exception = futures[0].exception()
+    future = client.purge_by_cpcode([1234, 5678])
+    exception = future.exception()
 
     assert isinstance(exception, FastPurgeError)
     assert '503 simulated internal error' in str(exception)
@@ -163,18 +160,18 @@ def test_split_requests(client, requests_mocker):
         status_code=201,
         json={'estimatedSeconds': 0.1})
 
-    # It should have split this into 4 requests
-    futures = client.purge_by_url(urls)
-    assert len(futures) == 4
+    future = client.purge_by_url(urls)
 
-    # Each request should succeed
-    for f in futures:
-        assert f.result()
+    # It should succeed
+    result = future.result()
+
+    # It should have split this into 4 requests (hence 4 responses)
+    assert len(result) == 4
 
     history = requests_mocker.request_history
 
     # There should have been one API request per future
-    assert len(history) == len(futures)
+    assert len(history) == len(result)
 
     # Collect all the objects across every API request
     all_objects = []

@@ -8,6 +8,7 @@ from monotonic import monotonic
 import logging
 import requests
 from more_executors import Executors
+from more_executors.futures import f_sequence
 from akamai.edgegrid import EdgeGridAuth
 from akamai.edgegrid.edgerc import EdgeRc
 
@@ -253,13 +254,17 @@ class FastPurgeClient(object):
                 these purge types. The default is "delete".
 
         Returns:
-            :class:`list`:
-                a list of :class:`~concurrent.futures.Future` instances representing the purge(s)
-                in progress, with:
+            :class:`~concurrent.futures.Future` of :class:`list`:
+                a Future resolved when the purge completes or fails, with:
 
                 result:
-                    If a purge succeeds, the result is a response from the Fast Purge API
-                    (:class:`dict`).
+                    If a purge succeeds, the result is a list of responses from the
+                    Fast Purge API (:class:`dict`). See the Akamai Fast Purge documentation
+                    for the expected fields in the response.
+
+                    Typically, the result would contain only a single response object.
+                    Multiple responses are provided if the client split a large cache
+                    invalidation request into multiple smaller requests.
 
                     **Warning:** future resolution is based only on the estimated time to
                     completion provided by the Fast Purge API. There is no guarantee that the
@@ -268,9 +273,6 @@ class FastPurgeClient(object):
                 exception:
                     If purge(s) fail, an exception will be set; typically, though
                     not always, an instance of :class:`FastPurgeError`.
-
-                Typically, the returned list would include only a single future, unless purge of
-                a large number of objects was requested.
 
         .. _fast purge concepts:
            https://developer.akamai.com/api/core_features/fast_purge/v3.html#concepts
@@ -290,7 +292,7 @@ class FastPurgeClient(object):
             future = self.__executor.submit(self.__start_purge, endpoint, request_body)
             futures.append(future)
 
-        return futures
+        return f_sequence(futures)
 
     def purge_by_url(self, urls, **kwargs):
         """Convenience method for :meth:`purge_objects` with `object_type='url'`"""
