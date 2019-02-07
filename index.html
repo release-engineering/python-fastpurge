@@ -96,12 +96,15 @@ these purge types. The default is “delete”.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p>a list of <a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> instances representing the purge(s)
-in progress, with:</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p>a Future resolved when the purge completes or fails, with:</p>
 <dl class="docutils">
 <dt>result:</dt>
-<dd><p class="first">If a purge succeeds, the result is a response from the Fast Purge API
-(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>).</p>
+<dd><p class="first">If a purge succeeds, the result is a list of responses from the
+Fast Purge API (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>). See the Akamai Fast Purge documentation
+for the expected fields in the response.</p>
+<p>Typically, the result would contain only a single response object.
+Multiple responses are provided if the client split a large cache
+invalidation request into multiple smaller requests.</p>
 <p class="last"><strong>Warning:</strong> future resolution is based only on the estimated time to
 completion provided by the Fast Purge API. There is no guarantee that the
 purge has completed.</p>
@@ -111,12 +114,10 @@ purge has completed.</p>
 not always, an instance of <a class="reference internal" href="#fastpurge.FastPurgeError" title="fastpurge.FastPurgeError"><code class="xref py py-class docutils literal notranslate"><span class="pre">FastPurgeError</span></code></a>.</p>
 </dd>
 </dl>
-<p>Typically, the returned list would include only a single future, unless purge of
-a large number of objects was requested.</p>
 </p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p>
 </td>
 </tr>
 </tbody>
