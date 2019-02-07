@@ -8,9 +8,24 @@ matrix:
   - python: "3.5"
     env: TOX_ENV=static
   - python: "3.5"
-    env: TOX_ENV=cov-travis
+    env: TOX_ENV=cov-travis DEPLOY=1
   - python: "3.5"
     env: TOX_ENV=docs
 script: tox -e $TOX_ENV
 after_success:
 - test $TOX_ENV = docs && scripts/push-docs
+
+deploy:
+  # Adding a new tag automatically releases to PyPI.
+  provider: pypi
+  user: content-delivery-release-bot
+  password:
+    secure: mbwepZxFTZb5OxgIr9XcYJzHYHj2xeSSfciGW8ZIycqLcV7j+j1amoc/81Smj1CBmcyLrA9VHuOPt60GhQbn7NYxaJY3bz8aAMx9FwUZwjwbvjhcWuruQ64g195AToC9NTqJ/44emioJHcXZuwaO79rjWOhBcdnAKnypfebmxDSp73WHcpHduZUJc8V32AM8lJJFi7G+K2ExENxyRt9Jp8j16re5UJ9L6LHiPRD11/sOZ3dyzIfKz+HJ4nYsEi9Z+h4+VLh8kBqDVlCFCVgEWhQfrP+hUe0QapJtiBEDwB9Uv7b+r7JmbStPmIJCp0QHOkTB//cqs9XSN37xiKZ+0LhwQze1VJwWR/sRCnZQCX96y6StBgjNnTB3dSD2oimQdL6NDXvkpVOFmN24O810SeSy4RxRiM3X1aDCtRLIa5jp8SaKvLJWuxOMOXtr3nhR9BBeqjNZCFKEXwWWCo2IyLRYIwDj3kFPOTRfn6SQhA96CZspE4vgNcdXDwt6MLNZYtlNxnlj2x9adHed20dAYt/18Xj3kV2pJiI3wwF6Deo0AAAy0h0eJT5g7BOikl4UaeRWtsb1YJCW3QcInnTbvlBLB9Wsxbsh1Vq015E/EEjC63ztXCLj9vtafpjTMN0c3XHakWwKRdbh8Rdjp8G8PxLRF3MRfbCPNrYWmuynIUY=
+  on:
+    tags: true
+    # Only one of the environments in the matrix should have
+    # deployments enabled. It's mostly arbitrary which one,
+    # but best to select some Python 3.x so up-to-date tools
+    # are used during release.
+    condition: $DEPLOY = 1
+  skip_existing: true
