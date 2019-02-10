@@ -1,6 +1,7 @@
-import pytest
 import os
 import textwrap
+
+import pytest
 
 from fastpurge import FastPurgeError
 from fastpurge._client import get_auth_dict
