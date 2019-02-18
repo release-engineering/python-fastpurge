@@ -14,6 +14,11 @@ def get_long_description():
     return text[idx:]
 
 
+def get_requirements():
+    with open('requirements.txt') as f:
+        return f.read().splitlines()
+
+
 setup(
     name='fastpurge',
     version='1.0.0',
@@ -35,11 +40,5 @@ setup(
         'Programming Language :: Python :: 3',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    install_requires=[
-        'requests',
-        'more-executors>=1.19.1',
-        'six',
-        'monotonic',
-        'edgegrid-python',
-    ],
+    install_requires=get_requirements(),
 )
