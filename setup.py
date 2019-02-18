@@ -6,13 +6,8 @@ def get_description():
 
 
 def get_long_description():
-    try:
-        text = open('README.md').read()
-    except IOError as error:
-        if error.errno == 2:
-            # fallback for older setuptools
-            return get_description()
-        raise
+    with open('README.md') as f:
+        text = f.read()
 
     # Long description is everything after README's initial heading
     idx = text.find('\n\n')
