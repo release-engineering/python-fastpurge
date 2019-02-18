@@ -27,7 +27,6 @@ Install the `fastpurge` package from PyPI.
 pip install fastpurge
 ```
 
-
 Usage Example
 -------------
 
@@ -48,7 +47,6 @@ purged = client.purge_by_url(['https://example.com/resource1', 'https://example.
 result = purged.result()
 print("Purge completed:", result)
 ```
-
 
 License
 -------
