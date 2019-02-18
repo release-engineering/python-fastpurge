@@ -5,6 +5,7 @@ A Python client for the [Akamai Fast Purge API](https://developer.akamai.com/api
 
 [![Build Status](https://travis-ci.org/release-engineering/python-fastpurge.svg?branch=master)](https://travis-ci.org/release-engineering/python-fastpurge)
 [![Coverage Status](https://coveralls.io/repos/github/release-engineering/python-fastpurge/badge.svg?branch=master)](https://coveralls.io/github/release-engineering/python-fastpurge?branch=master)
+[![Maintainability](https://api.codeclimate.com/v1/badges/2a5d60f6ddb557d88055/maintainability)](https://codeclimate.com/github/release-engineering/python-fastpurge/maintainability)
 
 - [Source](https://github.com/release-engineering/python-fastpurge)
 - [Documentation](https://release-engineering.github.io/python-fastpurge/)
