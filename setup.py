@@ -6,17 +6,17 @@ def get_description():
 
 
 def get_long_description():
-    try:
-        text = open('README.md').read()
-    except IOError as error:
-        if error.errno == 2:
-            # fallback for older setuptools
-            return get_description()
-        raise
+    with open('README.md') as f:
+        text = f.read()
 
     # Long description is everything after README's initial heading
     idx = text.find('\n\n')
     return text[idx:]
+
+
+def get_requirements():
+    with open('requirements.txt') as f:
+        return f.read().splitlines()
 
 
 setup(
@@ -40,11 +40,5 @@ setup(
         'Programming Language :: Python :: 3',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    install_requires=[
-        'requests',
-        'more-executors>=1.19.1',
-        'six',
-        'monotonic',
-        'edgegrid-python',
-    ],
+    install_requires=get_requirements(),
 )
