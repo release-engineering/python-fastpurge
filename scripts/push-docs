@@ -2,7 +2,7 @@
 set -e
 
 enabled(){
-  if [ "$TRAVIS_BRANCH" != "master" ] || [ $TRAVIS_PULL_REQUEST != "false" ]; then
+  if [ "$TRAVIS_BRANCH" != "master" ] || [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
     return 1
   fi
 }
