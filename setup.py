@@ -42,7 +42,7 @@ setup(
     ],
     install_requires=[
         'requests',
-        'more-executors',
+        'more-executors>=1.19.1',
         'six',
         'monotonic',
         'edgegrid-python',
