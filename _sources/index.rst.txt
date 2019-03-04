@@ -59,7 +59,7 @@ explicitly, as in example:
     from fastpurge import FastPurgeClient
     client = FastPurgeClient(auth={
         # The entries from ~/.edgerc can be supplied directly here
-        "host": "akaa-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx.luna.akamaiapis.net",
+        "host": "akaa-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx.purge.akamaiapis.net",
         "client_token": "akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx",
         "client_secret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         "access_token": "akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx",
