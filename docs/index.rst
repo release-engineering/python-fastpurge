@@ -3,13 +3,8 @@ fastpurge
 
 A client for the `Akamai Fast Purge API`_.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-- `Source <https://github.com/release-engineering/python-fastpurge>`_
-- `Documentation <https://release-engineering.github.io/python-fastpurge/>`_
-- `PyPI <https://pypi.org/project/fastpurge>`_
+.. contents::
+  :local:
 
 Quick Start
 -----------
