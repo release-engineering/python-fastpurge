@@ -39,6 +39,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=get_requirements(),
+    python_requires='>=2.6',
     project_urls={
         'Documentation':
             'https://release-engineering.github.io/python-fastpurge/',
