@@ -39,4 +39,10 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=get_requirements(),
+    project_urls={
+        'Documentation':
+            'https://release-engineering.github.io/python-fastpurge/',
+        'Changelog':
+            'https://github.com/release-engineering/python-fastpurge/blob/master/CHANGELOG.md',
+    },
 )
