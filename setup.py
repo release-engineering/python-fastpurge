@@ -22,8 +22,6 @@ def get_requirements():
 setup(
     name='fastpurge',
     version='1.0.1',
-    author='',
-    author_email='',
     packages=['fastpurge'],
     url='https://github.com/release-engineering/python-fastpurge',
     license='GNU General Public License',
