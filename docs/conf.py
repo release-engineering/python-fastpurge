@@ -91,7 +91,8 @@ html_theme_options = {
     'github_banner': True,
     'description': 'A client for Akamai Fast Purge',
     'extra_nav_links': {
-        'API Reference': 'index.html',
+        'Source': 'https://github.com/release-engineering/python-fastpurge',
+        'PyPI': 'https://pypi.org/project/fastpurge',
         'Index': 'genindex.html',
     }
 }

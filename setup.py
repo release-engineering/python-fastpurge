@@ -22,8 +22,6 @@ def get_requirements():
 setup(
     name='fastpurge',
     version='1.0.1',
-    author='',
-    author_email='',
     packages=['fastpurge'],
     url='https://github.com/release-engineering/python-fastpurge',
     license='GNU General Public License',
@@ -41,4 +39,11 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=get_requirements(),
+    python_requires='>=2.6',
+    project_urls={
+        'Documentation':
+            'https://release-engineering.github.io/python-fastpurge/',
+        'Changelog':
+            'https://github.com/release-engineering/python-fastpurge/blob/master/CHANGELOG.md',
+    },
 )
