@@ -134,7 +134,7 @@ class FastPurgeClient(object):
             with self.__lock:
                 if self.___executor is None:
                     self.___executor = Executors.\
-                        sync().\
+                        sync(name="fastpurge").\
                         with_poll(self.__poll_purges).\
                         with_throttle(count=self.MAX_REQUESTS).\
                         with_retry().\
