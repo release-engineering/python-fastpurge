@@ -1,5 +1,5 @@
 requests
-more-executors>=1.19.1
+more-executors>=2.7.0
 six
 monotonic
 edgegrid-python
