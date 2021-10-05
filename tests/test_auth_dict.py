@@ -21,13 +21,12 @@ def tmp_home(tmpdir):
 
 
 def test_auth_from_dict():
-    """get_auth_dict, if given a dict, returns the input."""
+    """get_auth_dict, if given a dict, returns a dict with the same key/value pairs."""
 
     some_dict = {'foo': 'bar'}
     result = get_auth_dict(some_dict)
 
-    # It should return exactly the input value.
-    assert result is some_dict
+    assert result == some_dict
 
 
 def test_auth_bad_type():

@@ -317,7 +317,9 @@ class FastPurgeClient(object):
 
 def get_auth_dict(value):
     if isinstance(value, dict):
-        return value
+        # shallow copy the auth dict if provided
+        # to avoid conflicting in-place updates (e.g. pop())
+        return dict(value)
 
     if value is None:
         value = os.path.expanduser('~/.edgerc')
