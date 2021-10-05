@@ -316,6 +316,23 @@ class FastPurgeClient(object):
 
 
 def get_auth_dict(value):
+    """Get :class:`akamai.edgegrid.EdgeGridAuth` authentication data.
+
+    Parameters:
+        value (dict or str): If ``value`` is a :py:class:`dict`,
+            then a shallow copy of that dict is returned. Otherwise,
+            ``value`` must be a string representing a filesystem path
+            to an .edgerc configuration file.
+
+    Returns:
+         dict: a dictionary representing the authentication data needed by
+            the :class:`akamai.edgegrid.EdgeGridAuth` API.
+
+    Raises:
+        TypeError: if ``value`` is not a :py:class:`dict` or :py:class:`str`.
+        FastPurgeError: if ``value`` represents a path to an .edgerc
+            configuration file and that path does not exist.
+    """
     if isinstance(value, dict):
         # shallow copy the auth dict if provided
         # to avoid conflicting in-place updates (e.g. pop())
