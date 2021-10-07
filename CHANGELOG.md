@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- n/a
+
+## 1.0.3 - 2021-10-07
+
+### Fixed
+
+- When constructing a `FastPurgeClient` with an `auth` dict, the given dict is no
+  longer modified. Previously, dict contents would be modified destructively,
+  preventing reuse of the object for more than one client.
+
 ### Changed
 
 - Executors are now named for improved metrics/debuggability.
