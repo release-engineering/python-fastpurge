@@ -190,3 +190,11 @@ def test_split_requests(client, requests_mocker):
     # The total set of objects sent to the API should be equal to that
     # provided to the client
     assert sorted(all_objects) == sorted(urls)
+
+
+def test_multiple_clients_with_the_same_auth_dict(client_auth):
+    """Constructing multiple clients with the same auth dict instance should be allowed."""
+    client1 = FastPurgeClient(auth=client_auth)
+    client2 = FastPurgeClient(auth=client_auth)
+
+    assert client1 is not client2
