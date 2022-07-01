@@ -11,6 +11,10 @@ matrix:
     env: TOX_ENV=cov-travis DEPLOY=1
   - python: "3.5"
     env: TOX_ENV=docs
+  - python: "3.8"
+    env: TOX_ENV=py3-bandit-exitzero
+  - python: "3.8"
+    env: TOX_ENV=py3-bandit
 script: tox -e $TOX_ENV
 after_success:
 - test $TOX_ENV = docs && scripts/push-docs
