@@ -1,5 +1,5 @@
 requests
 more-executors>=2.7.0
 six
-monotonic
+monotonic; python_version < '3.3'
 edgegrid-python
