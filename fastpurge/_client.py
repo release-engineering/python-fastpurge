@@ -7,12 +7,16 @@ from threading import local, Lock
 
 import requests
 
+try:
+    from time import monotonic
+except ImportError:  # pragma: no cover
+    from monotonic import monotonic
+
 from six import string_types
 from six.moves.urllib.parse import urljoin
 
 from akamai.edgegrid import EdgeGridAuth
 from akamai.edgegrid.edgerc import EdgeRc
-from monotonic import monotonic
 from more_executors import Executors
 from more_executors.futures import f_sequence
 

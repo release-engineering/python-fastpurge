@@ -2,7 +2,10 @@ import pytest
 import requests_mock
 import mock
 
-from monotonic import monotonic
+try:
+    from time import monotonic
+except ImportError:
+    from monotonic import monotonic
 
 from fastpurge import FastPurgeClient, FastPurgeError
 
