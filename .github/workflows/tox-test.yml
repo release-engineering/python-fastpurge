@@ -1,0 +1,143 @@
+name: Tox tests
+
+on: [push, pull_request]
+
+jobs:
+  py27:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm libkrb5-dev
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '2.7'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e py27
+  py39:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm libkrb5-dev
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e py39
+  py310:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm libkrb5-dev
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e py310
+  py311:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm libkrb5-dev
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e py311
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm libkrb5-dev
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e static
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm libkrb5-dev
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e cov
+
+      # Codcov Action required installing pytest-cov as it needs coverage.
+      # The coverage library installed within tox is in virt-env and not 
+      # accessible to Codecov.
+      - name: Install pytest cov
+        run: pip install pytest-cov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm libkrb5-dev
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e docs
+  bandit-exitzero:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e py3-bandit-exitzero
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e py3-bandit
