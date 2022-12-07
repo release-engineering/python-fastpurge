@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - n/a
 
+## 1.0.4 - 2022-12-07
+
+### Changed
+
+- Use `time.monotonic` from the standard library on python 3.3 or newer and fall
+  back to `monotonic` module only on older python versions.
+
 ## 1.0.3 - 2021-10-07
 
 ### Fixed
