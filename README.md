@@ -3,8 +3,8 @@ python-fastpurge
 
 A Python client for the [Akamai Fast Purge API](https://developer.akamai.com/api/core_features/fast_purge/v3.html).
 
-[![Build Status](https://travis-ci.org/release-engineering/python-fastpurge.svg?branch=master)](https://travis-ci.org/release-engineering/python-fastpurge)
-[![Coverage Status](https://coveralls.io/repos/github/release-engineering/python-fastpurge/badge.svg?branch=master)](https://coveralls.io/github/release-engineering/python-fastpurge?branch=master)
+[![Build Status](https://github.com/release-engineering/python-fastpurge/actions/workflows/tox-test.yml/badge.svg)](https://github.com/release-engineering/python-fastpurge/actions/workflows/tox-test.yml)
+[![codecov](https://codecov.io/gh/release-engineering/python-fastpurge/branch/master/graph/badge.svg?token=cRnzaGyvkk)](https://codecov.io/gh/release-engineering/python-fastpurge)
 [![Maintainability](https://api.codeclimate.com/v1/badges/2a5d60f6ddb557d88055/maintainability)](https://codeclimate.com/github/release-engineering/python-fastpurge/maintainability)
 
 - [Source](https://github.com/release-engineering/python-fastpurge)
