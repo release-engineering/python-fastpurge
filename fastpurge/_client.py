@@ -7,13 +7,9 @@ from threading import local, Lock
 
 import requests
 
-try:
-    from time import monotonic
-except ImportError:  # pragma: no cover
-    from monotonic import monotonic
+from time import monotonic
 
-from six import string_types
-from six.moves.urllib.parse import urljoin
+from urllib.parse import urljoin
 
 from akamai.edgegrid import EdgeGridAuth
 from akamai.edgegrid.edgerc import EdgeRc
@@ -345,7 +341,7 @@ def get_auth_dict(value):
     if value is None:
         value = os.path.expanduser('~/.edgerc')
 
-    if not isinstance(value, string_types):
+    if not isinstance(value, str):
         raise TypeError("Invalid 'auth' argument")
 
     if not os.path.exists(value):
