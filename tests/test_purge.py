@@ -1,6 +1,7 @@
 import pytest
 import requests_mock
 import mock
+import responses
 
 try:
     from time import monotonic
@@ -37,7 +38,7 @@ def requests_mocker():
 
 
 @pytest.fixture
-def no_retries():
+def no_thread_retries():
     """Suppress retries for the duration of this fixture."""
 
     with mock.patch('more_executors.retry.ExceptionRetryPolicy') as policy_class:
@@ -131,20 +132,20 @@ def test_scheme_port(client_auth, requests_mocker):
     assert future.result()
 
 
-def test_response_fails(client, requests_mocker, no_retries):
+@responses.activate
+def test_response_fails(client,  no_thread_retries, monkeypatch):
     """Requests fail with a FastPurgeError if API gives unsuccessful response."""
+    url = 'https://fastpurge.example.com/ccu/v3/delete/cpcode/production'
+    # Decrease backoff, otherwise the test will run for 5 minutes
+    monkeypatch.setenv("FAST_PURGE_RETRY_BACKOFF", "0.001")
 
-    requests_mocker.register_uri(
-        method='POST',
-        url='https://fastpurge.example.com/ccu/v3/delete/cpcode/production',
-        status_code=503,
-        reason='simulated internal error')
-
+    responses.add(responses.POST, url, status=503,
+                  content_type="application/json", body="Error")
     future = client.purge_by_cpcode([1234, 5678])
     exception = future.exception()
 
     assert isinstance(exception, FastPurgeError)
-    assert '503 simulated internal error' in str(exception)
+    assert 'too many 503 error responses' in str(exception)
 
 
 def test_split_requests(client, requests_mocker):
@@ -201,3 +202,25 @@ def test_multiple_clients_with_the_same_auth_dict(client_auth):
     client2 = FastPurgeClient(auth=client_auth)
 
     assert client1 is not client2
+
+
+@responses.activate(registry=responses.registries.OrderedRegistry)
+def test_retries_on_error(client_auth):
+    """Sanity check for the retry functionality"""
+    url = 'http://fastpurge.example.com:42/ccu/v3/delete/tag/staging'
+    err_1 = responses.add(responses.POST, url, status=500,
+                          content_type="application/json", body="Error")
+    err_2 = responses.add(responses.POST, url, status=501,
+                          content_type="application/json", body="Error")
+    res = responses.add(responses.POST, url, status=201,
+                        content_type="application/json",
+                        json={'estimatedSeconds': 0.1})
+
+    client = FastPurgeClient(auth=client_auth, scheme='http', port=42)
+
+    future = client.purge_by_tag(['red'], network='staging')
+
+    assert future.result()
+    assert len(err_1.calls) == 1
+    assert len(err_2.calls) == 1
+    assert len(res.calls) == 1
