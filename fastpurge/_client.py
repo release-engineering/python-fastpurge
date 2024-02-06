@@ -6,6 +6,10 @@ from collections import namedtuple
 from threading import local, Lock
 
 import requests
+from requests.adapters import HTTPAdapter
+from requests.exceptions import RetryError
+from urllib3.util import Retry
+from http import HTTPStatus
 
 try:
     from time import monotonic
@@ -30,6 +34,29 @@ Purge = namedtuple('Purge', [
     # estimated time for completion of a purge (in monotonic clock)
     'estimated_complete',
 ])
+
+
+class LoggingRetry(Retry):
+    def __init__(self, *args, **kwargs, ):
+        self._logger = kwargs.pop('logger', None)
+        super(LoggingRetry, self).__init__(*args, **kwargs)
+
+    def new(self, **kw):
+        kw['logger'] = self._logger
+        return super(LoggingRetry, self).new(**kw)
+
+    def increment(self, method, url, *args, **kwargs):
+        response = kwargs.get("response")
+        if response:
+            self._logger.error("An invalid status code %s was received "
+                               "when trying to %s to %s: %s",
+                               response.status, method, url, response.reason)
+        else:  # pragma: no cover
+            self._logger.error(
+                "An unknown error occurred when trying to %s to %s", method,
+                url)
+        return super(LoggingRetry, self).increment(method, url, *args,
+                                                   **kwargs)
 
 
 class FastPurgeError(RuntimeError):
@@ -74,6 +101,11 @@ class FastPurgeClient(object):
     # Default network matches Akamai's documented default
     DEFAULT_NETWORK = os.environ.get("FAST_PURGE_DEFAULT_NETWORK", "production")
 
+    # Max number of retries allowed for HTTP requests, and the backoff used
+    # to extend the delay between requests.
+    MAX_RETRIES = int(os.environ.get("FAST_PURGE_MAX_RETRIES", "10"))
+
+    RETRY_BACKOFF = float(os.environ.get("FAST_PURGE_RETRY_BACKOFF", "0.15"))
     # Default purge type.
     # Akamai recommend "invalidate", so why is "delete" our default?
     # Here's what Akamai docs have to say:
@@ -198,11 +230,31 @@ class FastPurgeClient(object):
         return '{out}:{port}'.format(out=out, port=self.__port)
 
     @property
+    def __retry_policy(self):
+        retries = getattr(self.__local, 'retries', None)
+        if not retries:
+            retries = LoggingRetry(
+                total=self.MAX_RETRIES,
+                backoff_factor=self.RETRY_BACKOFF,
+                # We strictly require 201 here since that's how the server
+                # tells us we queued something async, as expected
+                status_forcelist=[status.value for status in HTTPStatus
+                                  if status.value != 201],
+                allowed_methods={'POST'},
+                logger=LOG,
+            )
+            self.__local.retries = retries
+        return retries
+
+    @property
     def __session(self):
         session = getattr(self.__local, 'session', None)
         if not session:
             session = requests.Session()
             session.auth = EdgeGridAuth(**self.__auth)
+            session.mount(self.__baseurl,
+                          HTTPAdapter(max_retries=self.__retry_policy))
+
             self.__local.session = session
         return session
 
@@ -223,21 +275,16 @@ class FastPurgeClient(object):
     def __start_purge(self, endpoint, request_body):
         headers = {'Content-Type': 'application/json'}
         LOG.debug("POST JSON of size %s to %s", len(request_body), endpoint)
-
-        response = self.__session.post(endpoint, data=request_body, headers=headers)
-
-        # Did it succeed?  We strictly require 201 here since that's how the server tells
-        # us we queued something async, as expected
-        if response.status_code != 201:
-            message = "Request to {endpoint} failed: {r.status_code} {r.reason} {text}".\
-                      format(endpoint=endpoint, r=response, text=response.text[0:800])
+        try:
+            response = self.__session.post(endpoint, data=request_body, headers=headers)
+            response_body = response.json()
+            estimated_seconds = response_body.get('estimatedSeconds', 5)
+            return Purge(response_body, monotonic() + estimated_seconds)
+        except RetryError as e:
+            message = "Request to {endpoint} was unsuccessful after {retries} retries: {reason}". \
+                format(endpoint=endpoint, retries=self.MAX_RETRIES, reason=e.args[0].reason)
             LOG.debug("%s", message)
-            raise FastPurgeError(message)
-
-        response_body = response.json()
-        estimated_seconds = response_body.get('estimatedSeconds', 5)
-
-        return Purge(response_body, monotonic() + estimated_seconds)
+            raise FastPurgeError(message) from e
 
     def purge_objects(self, object_type, objects, **kwargs):
         """Purge a collection of objects.
