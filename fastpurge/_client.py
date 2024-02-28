@@ -173,7 +173,6 @@ class FastPurgeClient(object):
                         sync(name="fastpurge").\
                         with_poll(self.__poll_purges).\
                         with_throttle(count=self.MAX_REQUESTS).\
-                        with_retry().\
                         with_cancel_on_shutdown()
         return self.___executor
 
