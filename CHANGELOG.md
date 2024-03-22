@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - n/a
 
+# 1.0.5 - 2024-03-22
+
+### Changed
+
+- Improved handling and logging of retries for requests
+
 ## 1.0.4 - 2022-12-07
 
 ### Changed
