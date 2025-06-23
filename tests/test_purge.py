@@ -1,12 +1,16 @@
 import pytest
 import requests_mock
-import mock
 import responses
 
 try:
     from time import monotonic
 except ImportError:
     from monotonic import monotonic
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 from fastpurge import FastPurgeClient, FastPurgeError
 
@@ -41,7 +45,7 @@ def requests_mocker():
 def no_thread_retries():
     """Suppress retries for the duration of this fixture."""
 
-    with mock.patch('more_executors.retry.ExceptionRetryPolicy') as policy_class:
+    with patch('more_executors.retry.ExceptionRetryPolicy') as policy_class:
         policy = policy_class.return_value
         policy.should_retry.return_value = False
         policy.sleep_time.return_value = 0.1
