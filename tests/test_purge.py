@@ -1,4 +1,5 @@
 import pytest
+import requests
 import requests_mock
 import mock
 import responses
@@ -9,8 +10,15 @@ except ImportError:
     from monotonic import monotonic
 
 from fastpurge import FastPurgeClient, FastPurgeError
+from fastpurge._client import compute_backoff, parse_retry_statuses
 
 # pylint: disable=unused-argument
+
+# NOTE: FastPurgeClient class attributes (MAX_RETRIES, RETRY_BACKOFF, etc.) are
+# populated from environment variables once at import time, so monkeypatch.setenv
+# has no effect on tests -- the class is already defined. Use
+# monkeypatch.setattr(FastPurgeClient, "ATTR", value) instead, which is what the
+# corresponding env var would have set had it been present before import.
 
 
 @pytest.fixture
@@ -136,8 +144,9 @@ def test_scheme_port(client_auth, requests_mocker):
 def test_response_fails(client,  no_thread_retries, monkeypatch):
     """Requests fail with a FastPurgeError if API gives unsuccessful response."""
     url = 'https://fastpurge.example.com/ccu/v3/delete/cpcode/production'
-    # Decrease backoff, otherwise the test will run for 5 minutes
-    monkeypatch.setenv("FAST_PURGE_RETRY_BACKOFF", "0.001")
+    # Decrease backoff to avoid a multi-minute test run.
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF", 0.001)
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF_JITTER", 0)
 
     responses.add(responses.POST, url, status=503,
                   content_type="application/json", body="Error")
@@ -224,3 +233,165 @@ def test_retries_on_error(client_auth):
     assert len(err_1.calls) == 1
     assert len(err_2.calls) == 1
     assert len(res.calls) == 1
+
+
+@responses.activate(registry=responses.registries.OrderedRegistry)
+def test_resigns_each_retry(client_auth, monkeypatch):
+    """Each retry is re-signed, so the EdgeGrid Authorization header differs
+    between attempts. (urllib3-level retries reused the original signature,
+    which failed with "Invalid timestamp" past Akamai's ~30s window.)"""
+    url = 'http://fastpurge.example.com:42/ccu/v3/delete/tag/staging'
+    responses.add(responses.POST, url, status=429, body="Rate limited")
+    responses.add(responses.POST, url, status=429, body="Rate limited")
+    responses.add(responses.POST, url, status=201,
+                  content_type="application/json",
+                  json={'estimatedSeconds': 0.1})
+
+    # No real delay between attempts.
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF", 0)
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF_JITTER", 0)
+
+    client = FastPurgeClient(auth=client_auth, scheme='http', port=42)
+
+    assert client.purge_by_tag(['red'], network='staging').result()
+
+    auth_headers = [call.request.headers['Authorization']
+                    for call in responses.calls]
+    assert len(auth_headers) == 3
+    # A fresh signature (new timestamp + nonce) per attempt => all distinct.
+    assert len(set(auth_headers)) == 3
+
+
+@responses.activate
+def test_does_not_retry_auth_errors(client_auth):
+    """401/403 are not retried -- bad credentials/permissions won't self-correct."""
+    url = 'http://fastpurge.example.com:42/ccu/v3/delete/tag/staging'
+    responses.add(responses.POST, url, status=401, body="Unauthorized")
+
+    client = FastPurgeClient(auth=client_auth, scheme='http', port=42)
+    exception = client.purge_by_tag(['red'], network='staging').exception()
+
+    assert isinstance(exception, FastPurgeError)
+    assert 'non-retryable status 401' in str(exception)
+    # Failed immediately, no retries.
+    assert len(responses.calls) == 1
+
+
+@responses.activate(registry=responses.registries.OrderedRegistry)
+def test_retries_connection_errors(client_auth, monkeypatch):
+    """Connection/network errors are retried, not just HTTP statuses."""
+    url = 'http://fastpurge.example.com:42/ccu/v3/delete/tag/staging'
+    responses.add(responses.POST, url,
+                  body=requests.exceptions.ConnectionError("boom"))
+    responses.add(responses.POST, url, status=201,
+                  content_type="application/json",
+                  json={'estimatedSeconds': 0.1})
+
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF", 0)
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF_JITTER", 0)
+
+    client = FastPurgeClient(auth=client_auth, scheme='http', port=42)
+
+    assert client.purge_by_tag(['red'], network='staging').result()
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_accepts_non_json_201(client_auth):
+    """A 201 with a non-JSON body is still treated as an accepted purge
+    (robust to an unexpected response-shape change), using the default estimate."""
+    url = 'http://fastpurge.example.com:42/ccu/v3/delete/tag/staging'
+    responses.add(responses.POST, url, status=201, body="OK")  # not JSON
+
+    client = FastPurgeClient(auth=client_auth, scheme='http', port=42)
+    result = client.purge_by_tag(['red'], network='staging').result()
+
+    assert result == [{}]  # succeeded, with empty metadata
+
+
+def test_default_retry_statuses():
+    """Default allowlist: 429, 400 (EdgeGrid timestamp/WAF) and any 5xx are
+    retryable; other client errors are not."""
+    for status in (400, 429, 500, 501, 502, 503, 504, 599):
+        assert status in FastPurgeClient.RETRY_STATUSES, status
+    for status in (201, 401, 403, 404, 405, 413, 422):
+        assert status not in FastPurgeClient.RETRY_STATUSES, status
+
+
+def test_parse_retry_statuses():
+    """FAST_PURGE_RETRY_STATUSES parsing: single codes, inclusive ranges, and
+    tolerant of whitespace / empty items."""
+    assert parse_retry_statuses("429") == frozenset((429,))
+    assert parse_retry_statuses("400,429") == frozenset((400, 429))
+    assert parse_retry_statuses("500-504") == frozenset(range(500, 505))
+    assert parse_retry_statuses(" 429 , 500-599 ") == frozenset((429,)) | frozenset(range(500, 600))
+    assert parse_retry_statuses("") == frozenset()
+
+
+@responses.activate
+def test_retry_statuses_is_configurable(client_auth, monkeypatch):
+    """A status removed from RETRY_STATUSES is no longer retried (fails fast),
+    confirming the allowlist drives behavior."""
+    url = 'http://fastpurge.example.com:42/ccu/v3/delete/tag/staging'
+    responses.add(responses.POST, url, status=503, body="Error")
+
+    # Narrow the allowlist so 503 is NOT retryable.
+    monkeypatch.setattr(FastPurgeClient, "RETRY_STATUSES", frozenset((429,)))
+
+    client = FastPurgeClient(auth=client_auth, scheme='http', port=42)
+    exception = client.purge_by_tag(['red'], network='staging').exception()
+
+    assert isinstance(exception, FastPurgeError)
+    assert 'non-retryable status 503' in str(exception)
+    assert len(responses.calls) == 1  # failed immediately, no retries
+
+
+def test_compute_backoff_matches_urllib3_schedule():
+    """No jitter: first retry 0, then factor*2**(n-1), capped at backoff_max."""
+    delays = [compute_backoff(n, 1.5, 9, 0) for n in range(1, 6)]
+    assert delays == [0.0, 3.0, 6.0, 9.0, 9.0]  # 3, 6, 12->9, 24->9
+
+    # Jitter adds up to `jitter` seconds (here forced to its max) before the cap.
+    assert compute_backoff(2, 1.5, 100, 2.0, _rand=lambda: 1.0) == 3.0 + 2.0
+    # Neither the initial attempt (0) nor the first retry (1) ever sleeps,
+    # regardless of jitter.
+    assert compute_backoff(0, 1.5, 100, 2.0, _rand=lambda: 1.0) == 0.0
+    assert compute_backoff(1, 1.5, 100, 2.0, _rand=lambda: 1.0) == 0.0
+
+
+@responses.activate
+def test_honors_max_retries(client_auth, monkeypatch):
+    """A persistently failing status is attempted exactly MAX_RETRIES + 1 times."""
+    url = 'http://fastpurge.example.com:42/ccu/v3/delete/tag/staging'
+    responses.add(responses.POST, url, status=503, body="Error")
+
+    monkeypatch.setattr(FastPurgeClient, "MAX_RETRIES", 2)
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF", 0)
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF_JITTER", 0)
+
+    client = FastPurgeClient(auth=client_auth, scheme='http', port=42)
+    exception = client.purge_by_tag(['red'], network='staging').exception()
+
+    assert isinstance(exception, FastPurgeError)
+    assert len(responses.calls) == 3  # 1 initial attempt + 2 retries
+    assert 'too many 503 error responses' in str(exception)
+
+
+@responses.activate
+def test_connection_error_exhaustion(client_auth, monkeypatch):
+    """When every attempt hits a connection error, a FastPurgeError is raised
+    reporting the underlying error (not a 'too many N' status message)."""
+    url = 'http://fastpurge.example.com:42/ccu/v3/delete/tag/staging'
+    responses.add(responses.POST, url,
+                  body=requests.exceptions.ConnectionError("boom"))
+
+    monkeypatch.setattr(FastPurgeClient, "MAX_RETRIES", 2)
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF", 0)
+    monkeypatch.setattr(FastPurgeClient, "RETRY_BACKOFF_JITTER", 0)
+
+    client = FastPurgeClient(auth=client_auth, scheme='http', port=42)
+    exception = client.purge_by_tag(['red'], network='staging').exception()
+
+    assert isinstance(exception, FastPurgeError)
+    assert len(responses.calls) == 3  # 1 initial attempt + 2 retries
+    assert 'boom' in str(exception)

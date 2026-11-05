@@ -1,15 +1,13 @@
 import json
 import logging
 import os
+import random
+import time
 
 from collections import namedtuple
 from threading import local, Lock
 
 import requests
-from requests.adapters import HTTPAdapter
-from requests.exceptions import RetryError
-from urllib3.util import Retry
-from http import HTTPStatus
 
 try:
     from time import monotonic
@@ -36,33 +34,47 @@ Purge = namedtuple('Purge', [
 ])
 
 
-class LoggingRetry(Retry):
-    def __init__(self, *args, **kwargs, ):
-        self._logger = kwargs.pop('logger', None)
-        super(LoggingRetry, self).__init__(*args, **kwargs)
-
-    def new(self, **kw):
-        kw['logger'] = self._logger
-        return super(LoggingRetry, self).new(**kw)
-
-    def increment(self, method, url, *args, **kwargs):
-        response = kwargs.get("response")
-        if response:
-            self._logger.error("An invalid status code %s was received "
-                               "when trying to %s to %s: %s",
-                               response.status, method, url, response.reason)
-        else:  # pragma: no cover
-            self._logger.error(
-                "An unknown error occurred when trying to %s to %s", method,
-                url)
-        return super(LoggingRetry, self).increment(method, url, *args,
-                                                   **kwargs)
-
-
 class FastPurgeError(RuntimeError):
     """Raised when the Fast Purge API reports an error.
 
     The exception message contains a summary of the error encountered."""
+
+
+def compute_backoff(failures, backoff_factor, backoff_max, jitter,
+                    _rand=random.random):
+    """Delay (seconds) before retry number ``failures``.
+
+    Mirrors urllib3's exponential backoff so the ``FAST_PURGE_RETRY_*``
+    tunables keep their existing meaning: the first retry (``failures == 1``)
+    has no delay, then ``backoff_factor * 2 ** (failures - 1)`` plus up to
+    ``jitter`` seconds of random jitter, capped at ``backoff_max``.
+    """
+    if failures <= 1:
+        return 0.0
+    delay = backoff_factor * (2 ** (failures - 1))
+    if jitter:
+        delay += _rand() * jitter
+    return min(backoff_max, delay)
+
+
+def parse_retry_statuses(spec):
+    """Parse a FAST_PURGE_RETRY_STATUSES spec into a frozenset of ints.
+
+    ``spec`` is a comma-separated list where each item is either a single
+    status code (``"429"``) or an inclusive range (``"500-599"``). Whitespace
+    and empty items are ignored.
+    """
+    statuses = set()
+    for item in spec.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        if "-" in item:
+            low, high = item.split("-", 1)
+            statuses.update(range(int(low), int(high) + 1))
+        else:
+            statuses.add(int(item))
+    return frozenset(statuses)
 
 
 class FastPurgeClient(object):
@@ -108,6 +120,16 @@ class FastPurgeClient(object):
     RETRY_BACKOFF = float(os.environ.get("FAST_PURGE_RETRY_BACKOFF", "0.15"))
     RETRY_BACKOFF_MAX = float(os.environ.get("FAST_PURGE_RETRY_BACKOFF_MAX", "150"))
     RETRY_BACKOFF_JITTER = float(os.environ.get("FAST_PURGE_RETRY_JITTER", "2"))
+
+    # HTTP statuses worth retrying, as an allowlist -- anything not listed
+    # fails fast (e.g. 401/403/404/413 are not retried pointlessly). The
+    # default covers rate limiting (429), all server errors (500-599), and
+    # 400: Akamai returns 400 "Invalid timestamp" for a stale signature (fixed
+    # by re-signing on retry) and for WAF rate-control, both of which recover
+    # on a fresh attempt. Override with FAST_PURGE_RETRY_STATUSES, a
+    # comma-separated list of codes and/or inclusive ranges, e.g. "429,500-599".
+    RETRY_STATUSES = parse_retry_statuses(
+        os.environ.get("FAST_PURGE_RETRY_STATUSES", "400,429,500-599"))
 
     # Default purge type.
     # Akamai recommend "invalidate", so why is "delete" our default?
@@ -232,35 +254,23 @@ class FastPurgeClient(object):
         return '{out}:{port}'.format(out=out, port=self.__port)
 
     @property
-    def __retry_policy(self):
-        retries = getattr(self.__local, 'retries', None)
-        if not retries:
-            retries = LoggingRetry(
-                total=self.MAX_RETRIES,
-                backoff_factor=self.RETRY_BACKOFF,
-                backoff_max=self.RETRY_BACKOFF_MAX,
-                backoff_jitter=self.RETRY_BACKOFF_JITTER,
-                # We strictly require 201 here since that's how the server
-                # tells us we queued something async, as expected
-                status_forcelist=[status.value for status in HTTPStatus
-                                  if status.value != 201],
-                allowed_methods={'POST'},
-                logger=LOG,
-            )
-            self.__local.retries = retries
-        return retries
-
-    @property
     def __session(self):
         session = getattr(self.__local, 'session', None)
         if not session:
             session = requests.Session()
             session.auth = EdgeGridAuth(**self.__auth)
-            session.mount(self.__baseurl,
-                          HTTPAdapter(max_retries=self.__retry_policy))
-
+            # Deliberately no transport-level (urllib3) retries: those resend
+            # the request below the requests auth layer, reusing the original
+            # EdgeGrid signature, so any retry past Akamai's ~30s timestamp
+            # window fails with "Invalid timestamp". Retries are handled in
+            # __start_purge, which re-issues post() so each attempt is re-signed.
             self.__local.session = session
         return session
+
+    def __backoff_time(self, failures):
+        return compute_backoff(failures, self.RETRY_BACKOFF,
+                               self.RETRY_BACKOFF_MAX,
+                               self.RETRY_BACKOFF_JITTER)
 
     def __get_request_bodies(self, objects):
         out_object = {"objects": objects}
@@ -279,16 +289,72 @@ class FastPurgeClient(object):
     def __start_purge(self, endpoint, request_body):
         headers = {'Content-Type': 'application/json'}
         LOG.debug("POST JSON of size %s to %s", len(request_body), endpoint)
+
+        attempts = self.MAX_RETRIES + 1
+        last_reason = "no attempts made"
+        # One initial attempt plus up to MAX_RETRIES retries.
+        for failures in range(0, attempts):
+            delay = self.__backoff_time(failures)
+            if delay:
+                time.sleep(delay)
+
+            try:
+                # A fresh post() re-prepares the request, so EdgeGridAuth signs
+                # it again with a current timestamp. That is what lets a retry
+                # succeed after Akamai's ~30s signature window -- urllib3-level
+                # retries resend the original request with its now-stale
+                # signature and can never recover.
+                response = self.__session.post(
+                    endpoint, data=request_body, headers=headers)
+            except requests.exceptions.RequestException as error:
+                # Connection reset / timeout / etc: transient, always retryable.
+                last_reason = str(error)
+                LOG.error("An error occurred when trying to POST to %s: %s",
+                          endpoint, error)
+                continue
+
+            if response.status_code == 201:
+                # 201 is how Fast Purge acknowledges a queued async purge.
+                return self.__purge_from_response(response)
+
+            # Same message as before, expanded with Retry-After and the response
+            # body so the real Akamai error (e.g. "Invalid timestamp") is
+            # visible. .get()/.text are safe even if the API omits them.
+            LOG.error(
+                "An invalid status code %s was received when trying to POST "
+                "to %s: %s (Retry-After=%s): %s",
+                response.status_code, endpoint, response.reason,
+                response.headers.get("Retry-After"), (response.text or "")[:500])
+
+            if response.status_code not in self.RETRY_STATUSES:
+                # Permanent error (bad credentials/permissions/request) that
+                # won't self-correct -- fail fast instead of burning the window.
+                message = ("Request to %s failed with non-retryable status %s"
+                           % (endpoint, response.status_code))
+                LOG.debug("%s", message)
+                raise FastPurgeError(message)
+
+            last_reason = "too many %s error responses" % response.status_code
+
+        message = ("Request to {endpoint} was unsuccessful after {retries} "
+                   "retries: {reason}").format(
+                       endpoint=endpoint, retries=self.MAX_RETRIES,
+                       reason=last_reason)
+        LOG.debug("%s", message)
+        raise FastPurgeError(message)
+
+    @staticmethod
+    def __purge_from_response(response):
+        # Tolerate an unexpected non-JSON 201 (e.g. a future API change): still
+        # treat the purge as accepted, falling back to the default estimate.
         try:
-            response = self.__session.post(endpoint, data=request_body, headers=headers)
             response_body = response.json()
-            estimated_seconds = response_body.get('estimatedSeconds', 5)
-            return Purge(response_body, monotonic() + estimated_seconds)
-        except RetryError as e:
-            message = "Request to {endpoint} was unsuccessful after {retries} retries: {reason}". \
-                format(endpoint=endpoint, retries=self.MAX_RETRIES, reason=e.args[0].reason)
-            LOG.debug("%s", message)
-            raise FastPurgeError(message) from e
+        except ValueError:
+            LOG.warning("Purge accepted (201) with non-JSON body: %s",
+                        (response.text or "")[:200])
+            response_body = {}
+        estimated_seconds = response_body.get('estimatedSeconds', 5)
+        return Purge(response_body, monotonic() + estimated_seconds)
 
     def purge_objects(self, object_type, objects, **kwargs):
         """Purge a collection of objects.
