@@ -63,8 +63,8 @@ if you want to wait for the purge to complete.</p>
 <span class="n">client</span> <span class="o">=</span> <span class="n">FastPurgeClient</span><span class="p">()</span>
 
 <span class="c1"># start a purge of two URLs</span>
-<span class="n">future</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">purge_by_url</span><span class="p">([</span><span class="s2">&quot;https://example.com/resource1&quot;</span><span class="p">,</span>
-                              <span class="s2">&quot;https://example.com/resource2&quot;</span><span class="p">])</span>
+<span class="n">future</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">purge_by_url</span><span class="p">([</span><span class="s2">"https://example.com/resource1"</span><span class="p">,</span>
+                              <span class="s2">"https://example.com/resource2"</span><span class="p">])</span>
 
 <span class="c1"># wait for the purge to complete (or raise if purge fails)</span>
 <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
@@ -77,10 +77,10 @@ explicitly, as in example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fastpurge</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastPurgeClient</span>
 <span class="n">client</span> <span class="o">=</span> <span class="n">FastPurgeClient</span><span class="p">(</span><span class="n">auth</span><span class="o">=</span><span class="p">{</span>
     <span class="c1"># The entries from ~/.edgerc can be supplied directly here</span>
-    <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;akaa-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx.purge.akamaiapis.net&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;client_token&quot;</span><span class="p">:</span> <span class="s2">&quot;akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;client_secret&quot;</span><span class="p">:</span> <span class="s2">&quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;access_token&quot;</span><span class="p">:</span> <span class="s2">&quot;akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx&quot;</span><span class="p">,</span>
+    <span class="s2">"host"</span><span class="p">:</span> <span class="s2">"akaa-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx.purge.akamaiapis.net"</span><span class="p">,</span>
+    <span class="s2">"client_token"</span><span class="p">:</span> <span class="s2">"akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx"</span><span class="p">,</span>
+    <span class="s2">"client_secret"</span><span class="p">:</span> <span class="s2">"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</span><span class="p">,</span>
+    <span class="s2">"access_token"</span><span class="p">:</span> <span class="s2">"akab-xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx"</span><span class="p">,</span>
 <span class="p">})</span>
 </pre></div>
 </div>
@@ -92,7 +92,7 @@ explicitly, as in example:</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fastpurge.</span></span><span class="sig-name descname"><span class="pre">FastPurgeClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">auth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">443</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fastpurge.FastPurgeClient" title="Link to this definition">¶</a></dt>
 <dd><p>A client for the Akamai Fast Purge API.</p>
 <p>This class provides methods for purging content asynchronously.</p>
-<p>Purge operations are represented by <a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> objects
+<p>Purge operations are represented by <a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> objects
 which are resolved when the purge completes, or raise an exception when the
 purge fails.</p>
 <p>Though not mandatory, instances of this class may be used as a context manager, as in example:</p>
@@ -105,19 +105,19 @@ will be cancelled or abandoned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>auth</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>) – <p>The following values may be provided:</p>
+<li><p><strong>auth</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – <p>The following values may be provided:</p>
 <dl class="simple">
-<dt><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>:</dt><dd><p>Must contain all authentication components from <a class="reference external" href="https://developer.akamai.com/legacy/introduction/Conf_Client.html">.edgerc</a>:
+<dt><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>:</dt><dd><p>Must contain all authentication components from <a class="reference external" href="https://developer.akamai.com/legacy/introduction/Conf_Client.html">.edgerc</a>:
 host, client_token, client_secret, access_token.</p>
 </dd>
-<dt><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>:</dt><dd><p>Must be a path to an <a class="reference external" href="https://developer.akamai.com/legacy/introduction/Conf_Client.html">.edgerc</a> file to load.</p>
+<dt><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>:</dt><dd><p>Must be a path to an <a class="reference external" href="https://developer.akamai.com/legacy/introduction/Conf_Client.html">.edgerc</a> file to load.</p>
 </dd>
 <dt><cite>None</cite>:</dt><dd><p>Credentials are loaded from <cite>~/.edgerc</cite>.</p>
 </dd>
 </dl>
 </p></li>
-<li><p><strong>scheme</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Alternative scheme for requests (e.g. ‘http’).</p></li>
-<li><p><strong>port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Alternative port for requests.</p></li>
+<li><p><strong>scheme</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Alternative scheme for requests (e.g. ‘http’).</p></li>
+<li><p><strong>port</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – Alternative port for requests.</p></li>
 </ul>
 </dd>
 </dl>
@@ -132,10 +132,10 @@ collection of objects into smaller lists and issue multiple requests.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>object_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – type of object used for purge: “url”, “tag”, “cpcode”.</p></li>
-<li><p><strong>objects</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a>) – list of objects for purge (e.g. list of URLs, tags or cpcodes).</p></li>
-<li><p><strong>network</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – “staging” or “production”. The default is “production”.</p></li>
-<li><p><strong>purge_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – “delete” or “invalidate”. See <a class="reference external" href="https://developer.akamai.com/api/core_features/fast_purge/v3.html#concepts">fast purge concepts</a> for more information regarding
+<li><p><strong>object_type</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – type of object used for purge: “url”, “tag”, “cpcode”.</p></li>
+<li><p><strong>objects</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a>) – list of objects for purge (e.g. list of URLs, tags or cpcodes).</p></li>
+<li><p><strong>network</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – “staging” or “production”. The default is “production”.</p></li>
+<li><p><strong>purge_type</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – “delete” or “invalidate”. See <a class="reference external" href="https://developer.akamai.com/api/core_features/fast_purge/v3.html#concepts">fast purge concepts</a> for more information regarding
 these purge types. The default is “delete”.</p></li>
 </ul>
 </dd>
@@ -143,7 +143,7 @@ these purge types. The default is “delete”.</p></li>
 <dd class="field-even"><p><p>a Future resolved when the purge completes or fails, with:</p>
 <dl>
 <dt>result:</dt><dd><p>If a purge succeeds, the result is a list of responses from the
-Fast Purge API (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>). See the <a class="reference external" href="https://developer.akamai.com/api/core_features/fast_purge/v3.html#resources">fast purge resources</a>
+Fast Purge API (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>). See the <a class="reference external" href="https://developer.akamai.com/api/core_features/fast_purge/v3.html#resources">fast purge resources</a>
 for the expected fields in the response.</p>
 <p>Typically, the result would contain only a single response object.
 Multiple responses are provided if the client split a large cache
@@ -159,7 +159,7 @@ not always, an instance of <a class="reference internal" href="#fastpurge.FastPu
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
