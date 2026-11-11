@@ -3,20 +3,6 @@ name: Tox tests
 on: [push, pull_request]
 
 jobs:
-  py39:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install RPM
-        run: sudo apt-get install -y rpm libkrb5-dev
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Install Tox
-        run: pip install tox
-      - name: Run Tox
-        run: tox -e py39
   py310:
     runs-on: ubuntu-latest
     steps:
@@ -45,6 +31,20 @@ jobs:
         run: pip install tox
       - name: Run Tox
         run: tox -e py311
+  py312:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install RPM
+        run: sudo apt-get install -y rpm libkrb5-dev
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e py312
   static:
     runs-on: ubuntu-latest
     steps:
